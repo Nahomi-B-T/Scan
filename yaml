@@ -1,0 +1,40 @@
+name: Go Docker CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: golangci/golangci-lint-action@v2
+      with:
+        version: '1.20'
+
+    - name: Install dependencies
+      run: |
+        go mod tidy
+        go mod download
+
+    - name: Run tests
+      run: |
+        go test ./...
+
+    - name: Build Docker image
+      run: |
+        docker build -t my-app .
+
+    - name: Push Docker image to Docker Hub
+      run: |
+        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        docker push my-app
